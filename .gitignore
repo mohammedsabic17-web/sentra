@@ -1,0 +1,69 @@
+# ============ PYTHON / DJANGO ============
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Django
+*.sqlite3
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+static_collected/
+
+# Django migrations cache
+*/migrations/__pycache__/
+
+# ============ NODE / REACT ============
+node_modules/
+dist/
+build/
+.next/
+out/
+
+# Vite
+frontend/dist/
+frontend/node_modules/
+
+# ============ ENVIRONMENT VARIABLES ============
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# ============ IDE / EDITOR ============
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ============ LOGS ============
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============ MISC ============
+*.pem
+*.key
+schema.yaml
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
