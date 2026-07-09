@@ -225,10 +225,10 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "User & Access Management System",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
-    "SERVERS": [
-        {"url": "https://sentra-api.onrender.com", "description": "Production"},
-        {"url": "http://127.0.0.1:8000", "description": "Local development"},
-    ],
+   "SERVERS": [
+    {"url": "https://sentra-api-h9ho.onrender.com", "description": "Production"},
+    {"url": "http://127.0.0.1:8000", "description": "Local development"},
+],
     "SWAGGER_UI_SETTINGS": {
         "deepLinking": True,
         "persistAuthorization": True,
