@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -o errexit
 
@@ -18,13 +19,13 @@ for email, pwd, name in [
 ]:
     if not User.objects.filter(email=email).exists():
         User.objects.create_superuser(email=email, password=pwd, full_name=name)
-        print(f'Created superuser: {email}')
+        print('Created superuser: ' + email)
     else:
         u = User.objects.get(email=email)
         u.is_superuser = True
         u.is_staff = True
         u.save()
-        print(f'Superuser exists: {email}')
+        print('Superuser exists: ' + email)
 "
 
 # ============================================
@@ -50,7 +51,8 @@ for codename, description in permissions_data:
         codename=codename,
         defaults={'description': description}
     )
-    print(f'{'Created' if created else 'Exists'} permission: {codename}')
+    status = 'Created' if created else 'Exists'
+    print(status + ' permission: ' + codename)
 
 roles_data = [
     {
@@ -89,7 +91,8 @@ for role_data in roles_data:
             'is_system':   role_data['is_system'],
         }
     )
-    print(f'{'Created' if created else 'Exists'} role: {role.name}')
+    status = 'Created' if created else 'Exists'
+    print(status + ' role: ' + role.name)
 
     RolePermission.objects.filter(role=role).delete()
 
@@ -98,10 +101,10 @@ for role_data in roles_data:
             perm = Permission.objects.get(codename=perm_code)
             RolePermission.objects.get_or_create(role=role, permission=perm)
         except Permission.DoesNotExist:
-            print(f'Permission not found: {perm_code}')
+            print('Permission not found: ' + perm_code)
 
     count = RolePermission.objects.filter(role=role).count()
-    print(f'Assigned {count} permissions to {role.name}')
+    print('Assigned ' + str(count) + ' permissions to ' + role.name)
 
 User = get_user_model()
 admin_role = Role.objects.filter(name='Admin').first()
@@ -110,9 +113,9 @@ if admin_role:
     for user in User.objects.filter(is_superuser=True):
         try:
             user.roles.add(admin_role)
-            print(f'Assigned Admin role to: {user.email}')
+            print('Assigned Admin role to: ' + user.email)
         except AttributeError:
-            print(f'User {user.email} has no roles field - skipping')
+            print('User has no roles field: ' + user.email)
 
 print('=== Seeding complete ===')
 "
