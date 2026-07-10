@@ -5,37 +5,114 @@ pip install -r requirements.txt
 python manage.py collectstatic --no-input
 python manage.py migrate
 
-# Auto-create superuser with your credentials
+# ============================================
+# Auto-create superusers
+# ============================================
 python manage.py shell -c "
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
-# Superuser 1: your personal account
-email1 = 'mohammedsabic17@gmail.com'
-if not User.objects.filter(email=email1).exists():
-    User.objects.create_superuser(
-        email=email1,
-        password='sentra@321',
-        full_name='Mohammed Sabic'
-    )
-    print(f'Created superuser: {email1}')
-else:
-    user = User.objects.get(email=email1)
-    user.is_superuser = True
-    user.is_staff = True
-    user.set_password('sentra@321')
-    user.save()
-    print(f'Updated superuser: {email1}')
+for email, pwd, name in [
+    ('mohammedsabic17@gmail.com', 'sentra@321', 'Mohammed Sabic'),
+    ('admin@example.com', 'Admin@123', 'Admin User'),
+]:
+    if not User.objects.filter(email=email).exists():
+        User.objects.create_superuser(email=email, password=pwd, full_name=name)
+        print(f'Created superuser: {email}')
+    else:
+        u = User.objects.get(email=email)
+        u.is_superuser = True
+        u.is_staff = True
+        u.save()
+        print(f'Superuser exists: {email}')
+"
 
-# Superuser 2: backup admin account
-email2 = 'admin@example.com'
-if not User.objects.filter(email=email2).exists():
-    User.objects.create_superuser(
-        email=email2,
-        password='Admin@123',
-        full_name='Admin User'
+# ============================================
+# Auto-create roles and permissions
+# ============================================
+python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from roles.models import Role, Permission, RolePermission
+
+permissions_data = [
+    ('users.view',        'View the user list'),
+    ('users.create',      'Invite / add users'),
+    ('users.edit',        'Edit users and assign roles'),
+    ('users.delete',      'Deactivate users'),
+    ('roles.view',        'See roles'),
+    ('roles.manage',      'Create/edit roles and permissions'),
+    ('permissions.view',  'See permission catalogue'),
+    ('audit.view',        'Read the audit log'),
+]
+
+for codename, description in permissions_data:
+    perm, created = Permission.objects.get_or_create(
+        codename=codename,
+        defaults={'description': description}
     )
-    print(f'Created superuser: {email2}')
-else:
-    print(f'Superuser exists: {email2}')
+    print(f'{'Created' if created else 'Exists'} permission: {codename}')
+
+roles_data = [
+    {
+        'name': 'Admin',
+        'description': 'Full access, delete-protected',
+        'is_system': True,
+        'permissions': [
+            'users.view', 'users.create', 'users.edit', 'users.delete',
+            'roles.view', 'roles.manage', 'permissions.view', 'audit.view'
+        ]
+    },
+    {
+        'name': 'Manager',
+        'description': 'Manage users, view roles',
+        'is_system': False,
+        'permissions': [
+            'users.view', 'users.create', 'users.edit',
+            'users.delete', 'roles.view', 'permissions.view'
+        ]
+    },
+    {
+        'name': 'Viewer',
+        'description': 'Read-only access',
+        'is_system': False,
+        'permissions': [
+            'users.view', 'roles.view', 'permissions.view'
+        ]
+    },
+]
+
+for role_data in roles_data:
+    role, created = Role.objects.get_or_create(
+        name=role_data['name'],
+        defaults={
+            'description': role_data['description'],
+            'is_system':   role_data['is_system'],
+        }
+    )
+    print(f'{'Created' if created else 'Exists'} role: {role.name}')
+
+    RolePermission.objects.filter(role=role).delete()
+
+    for perm_code in role_data['permissions']:
+        try:
+            perm = Permission.objects.get(codename=perm_code)
+            RolePermission.objects.get_or_create(role=role, permission=perm)
+        except Permission.DoesNotExist:
+            print(f'Permission not found: {perm_code}')
+
+    count = RolePermission.objects.filter(role=role).count()
+    print(f'Assigned {count} permissions to {role.name}')
+
+User = get_user_model()
+admin_role = Role.objects.filter(name='Admin').first()
+
+if admin_role:
+    for user in User.objects.filter(is_superuser=True):
+        try:
+            user.roles.add(admin_role)
+            print(f'Assigned Admin role to: {user.email}')
+        except AttributeError:
+            print(f'User {user.email} has no roles field - skipping')
+
+print('=== Seeding complete ===')
 "
